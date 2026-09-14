@@ -1,166 +1,132 @@
-# Taxonomy for Efficient Diffusion
+# Efficient Diffusion 分类体系
 
-This taxonomy is designed for a survey whose focus is **efficient generation/inference** rather than the entire diffusion lifecycle.
+## 总体原则
 
-## 1. Fast Sampling & Step Reduction
+本仓库围绕生成阶段的实际成本组织方法：
 
-**Goal:** reduce the number of denoising/model evaluations.
+```text
+生成成本 ≈ 去噪步数 NFE × 单步计算成本 + 系统运行开销
+```
 
-Subfamilies:
-- deterministic/stochastic fast solvers;
-- high-order ODE/SDE solvers;
-- optimized timestep schedules;
-- adaptive timestep or trajectory selection;
-- solver/model co-design when the main gain is lower NFE.
+“训练 / 免训练 / 后训练”不是一级分类，而是每篇方法的属性。
 
-Boundary rule: if the original model is kept and only the sampling trajectory changes, place the work here rather than under distillation.
+## 1. 快速采样与步数缩减
 
-## 2. Distillation & Few-Step Generation
+目标：直接减少 NFE，但不重新训练一个全新的少步 student。
 
-**Goal:** train a generator that reaches comparable quality in much fewer steps.
+包括：
+- ODE / SDE Solver
+- Predictor–Corrector
+- Timestep Schedule Optimization
+- Trajectory Optimization
+- Sampling Step Skipping
 
-Subfamilies:
-- progressive distillation;
-- consistency distillation / consistency models;
-- latent consistency;
-- distribution matching distillation;
-- adversarial distillation;
-- hybrid consistency + adversarial objectives;
-- step-aware / phased / multi-stage distillation.
+代表：DDIM、PNDM、DPM-Solver、DPM-Solver++、UniPC、Align Your Steps。
 
-Boundary rule: training a new or modified generator for fewer inference steps belongs here even if the distillation loss also changes trajectory behavior.
+## 2. 蒸馏与少步生成
 
-## 3. Cache & Computation Reuse
+目标：通过训练得到 1–8 步即可完成生成的新模型。
 
-**Goal:** avoid recomputing redundant representations across denoising steps, layers, frames, or autoregressive chunks.
+包括：
+- Progressive Distillation
+- Consistency Distillation
+- Distribution Matching Distillation
+- Adversarial Diffusion Distillation
+- Rectified Flow / Few-step Flow Distillation
 
-Subfamilies:
-- static block/feature cache;
-- adaptive cache scheduling;
-- layer-wise cache;
-- token/region cache;
-- predictive / extrapolative cache;
-- delta / residual cache;
-- subspace-aware cache;
-- history / trajectory reuse in autoregressive video and world models;
-- approximate KV reuse for dLLMs.
+代表：Progressive Distillation、Consistency Models、LCM、DMD/DMD2、SDXL-Lightning、TCD、Phased DMD。
 
-A useful evolution line is:
+## 3. 缓存与计算复用
 
-`static reuse → adaptive reuse → fine-grained reuse → predictive reuse → globally optimized / history-aware reuse`.
+目标：保留采样步数，但减少相邻 timestep、layer、token 或历史片段的重复计算。
 
-## 4. Efficient Attention & Sparse Computation
+子类：
+- Feature / Block Cache
+- Layer Cache
+- Token / Region Cache
+- Adaptive Cache
+- Predictive Cache
+- Trajectory / Subspace Cache
+- Autoregressive / World-model History Cache
 
-**Goal:** reduce active computation within each denoising step.
+演化主线：
 
-Subfamilies:
-- token pruning;
-- token merging / clustering;
-- sparse attention;
-- linear / hybrid attention;
-- local/window/block attention;
-- dynamic attention pattern selection;
-- attention-head skipping;
-- layer/block skipping;
-- sparse MLP / conditional computation.
+```text
+直接复用旧特征
+→ 自适应决定何时刷新
+→ 预测未来特征
+→ 全局规划 Cache Schedule
+→ 面向 AR Video / World Model 的历史感知 Cache
+```
 
-Boundary rule: a method that skips a whole feature computation because a previous timestep result is reused is primarily **Cache**. A method that reduces the active token/edge/block set within the current computation is primarily **Sparse Computation**.
+代表：DeepCache、Δ-DiT、TeaCache、TaylorSeer、SVD-Cache、DPCache、TC-Padé、ARCache、WorldCache。
 
-## 5. Model Compression
+## 4. 高效注意力与稀疏计算
 
-**Goal:** reduce parameter count, memory traffic, or arithmetic cost of each model evaluation.
+目标：减少当前 forward 真正执行的 token / attention / head / block。
 
-Subfamilies:
-- post-training quantization (PTQ);
-- quantization-aware training (QAT);
-- weight / activation / KV quantization;
-- structured / unstructured pruning;
-- low-rank approximation;
-- architecture slimming;
-- representation/VAE compression when it directly lowers inference cost.
+包括：
+- Token Pruning
+- Token Merging / Clustering
+- Sparse Attention
+- Linear / Hybrid Attention
+- Head / Block Skipping
+- Dynamic / Selective Computation
 
-## 6. Systems & Parallelism
+边界规则：
+- “上一 timestep 算过，现在复用” → **Cache**
+- “当前 timestep 只计算一部分 token / edge / block” → **Sparse Compute**
 
-**Goal:** convert algorithmic efficiency into actual wall-clock throughput/latency improvements.
+代表：ToMeSD、AT-EDM、DiTFastAttn、Sparse VideoGen、SiTo、ASTRAEA、Light Forcing、LoSA、SparseD。
 
-Subfamilies:
-- patch / sequence parallelism;
-- tensor / pipeline parallelism;
-- CFG parallelism;
-- communication overlap;
-- distributed attention;
-- custom sparse/quantized kernels;
-- Flash/Sage-style attention kernels;
-- CPU/GPU offload;
-- compilation/operator fusion;
-- serving and batching optimizations.
+## 5. 模型压缩与低精度
 
-## Cross-cutting tag: Hybrid / Compound Acceleration
+目标：降低单次模型前向的参数、内存、带宽和算术成本。
 
-Recent methods increasingly combine multiple mechanisms. Do not force these into a seventh silo; instead assign a primary category plus secondary tags.
+包括：
+- PTQ / QAT
+- Weight / Activation Quantization
+- Structured / Unstructured Pruning
+- Low-rank Compression
+- Mixed Precision
 
-Examples:
-- **CacheQuant:** Cache + Quantization;
-- **Q&C:** Quantization + Cache + error compensation;
-- **QuantSparse:** Quantization + Sparse Attention;
-- **FastVideo / LightX2V:** Distillation + sparse attention + low precision + systems.
+代表：Q-Diffusion、Diff-Pruning、LD-Pruner、Q-DiT、DiTAS、DVD-Quant。
 
----
+## 6. 系统优化与并行
 
-# Application taxonomy
+目标：把算法层面的 FLOPs / NFE 改进转化为真实 latency / throughput 改进。
 
-## A. Image generation / editing
+包括：
+- Patch / Sequence Parallel
+- CFG Parallel
+- Pipeline / PipeFusion
+- Kernel Fusion
+- Offloading
+- Memory Management
+- Serving / Runtime Optimization
 
-Includes text-to-image, image-to-image, editing, personalization and controllable image generation.
+代表：ParaDiGMS、StreamDiffusion、DistriFusion、xDiT、FastVideo、LightX2V。
 
-Historical bottleneck: large NFE. Newer DiT-era bottlenecks increasingly include per-step attention/MLP cost.
+## 横向标签：复合加速
 
-## B. Video generation
+当一个方法同时组合多个一级类别时，标记为 **Hybrid / Compound**，但仍按其主要贡献归入一个主类。
 
-Includes text-to-video, image-to-video and video editing.
+代表：
+- CacheQuant：Cache + Quantization
+- QuantSparse：Quantization + Sparse Attention
+- Q&C：Quantization + Cache
+- TurboDiffusion：Distillation + Sparse/Low-bit Attention + W8A8 + Systems
+- FAST-AR：Temporal Cache + Sparse Self/Cross Attention
+- FastVideo / LightX2V：多技术统一推理框架
 
-Key cost structure: long spatiotemporal token sequence makes attention and memory dominant after step reduction.
+## 应用维度
 
-## C. World / action models
+每篇论文还会标记应用场景：
 
-Includes autoregressive video world models, action-conditioned generation, interactive world generation and related rollout settings.
+- 图像生成 / 编辑
+- 视频生成
+- Autoregressive Video / 世界模型
+- Diffusion Language Model（dLLM）
+- 其他：Audio、3D、Science、Robotics / Policy Diffusion
 
-Distinct bottleneck: repeated long-horizon rollout introduces history/KV/cache growth and cross-segment error accumulation.
-
-## D. Diffusion language models (dLLMs)
-
-Includes masked/discrete diffusion language modeling.
-
-Distinct bottleneck: repeated bidirectional full-sequence denoising. Standard autoregressive KV caching cannot be transferred directly; stable-token/approximate KV reuse and sparse attention become important.
-
-## E. Other modalities
-
-Audio/speech, 3D, molecules/science and robotics/policy diffusion are included selectively when a method contributes a distinct efficiency idea.
-
----
-
-# Third axis: optimization requirement
-
-Each paper should be labeled with one of the following where possible:
-
-- **Training-free:** no parameter updates; plug-and-play inference transformation.
-- **Calibration / search:** no full model training, but requires profiling/calibration/search.
-- **Post-training:** compression/optimization after pretrained model completion.
-- **Training-based:** requires distillation, fine-tuning, retraining or learning a new module.
-
-This axis is an attribute, not the main taxonomy, because training requirement does not explain *where the computation is removed*.
-
----
-
-# Recommended survey narrative
-
-A useful historical story is:
-
-1. **Reduce NFE:** DDIM → high-order solvers → optimized schedules.
-2. **Learn few-step generators:** progressive distillation → consistency → distribution/adversarial matching.
-3. **Reduce per-step cost:** cache → token reduction → sparse/linear attention → compression.
-4. **Turn FLOPs into real speed:** parallelism, kernels, offload and serving.
-5. **Application-aware acceleration:** image → video → world models / dLLMs.
-6. **Compound acceleration:** multiple redundancy dimensions optimized jointly.
-
-This narrative avoids a flat catalogue and emphasizes the changing bottleneck of diffusion inference.
+这一维度用于分析“同一种加速方法在不同扩散应用中为什么会面对不同瓶颈”。
