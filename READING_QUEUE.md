@@ -1,187 +1,99 @@
-# Prioritized Reading Queue
+# 后续逐篇精读顺序
 
-This queue is ordered for building the survey argument, not by publication date alone.
+## 第一阶段：建立共同基线
 
-## Tier 0 — Survey baselines
+先读这些，保证后面所有方法都能放进统一框架：
 
-Read first to avoid duplicating existing taxonomy.
+1. DDIM
+2. DPM-Solver / DPM-Solver++
+3. Progressive Distillation
+4. Consistency Models
+5. LCM
+6. DMD2
 
-1. **A Survey on Cache Methods in Diffusion Models: Toward Efficient Multi-Modal Generation** — https://arxiv.org/abs/2510.19755
-   - Extract: cache taxonomy, modalities, covered papers, open problems.
-2. **Efficient Diffusion Models: A Comprehensive Survey from Principles to Practices** — https://arxiv.org/abs/2410.11795
-   - Extract: lifecycle taxonomy, especially inference/deployment boundaries.
-3. **Efficient Diffusion Models: A Survey** — https://arxiv.org/abs/2502.06805
-   - Extract: algorithm/system/framework taxonomy and missing 2025–2026 developments.
-4. **Efficient Video Diffusion Models: Advancements and Challenges** — https://arxiv.org/abs/2604.15911
-   - Extract: step distillation / attention / compression / cache structure; benchmark tables.
+重点回答：**NFE 为什么能从几十步降到 1–8 步？继续降步数的质量瓶颈在哪里？**
 
----
+## 第二阶段：Cache 主线
 
-## Tier 1 — Foundations that define the six method families
-
-### Sampling
-- DDIM
-- DPM-Solver / DPM-Solver++
-- UniPC
-- Align Your Steps
-
-### Distillation
-- Progressive Distillation
-- Consistency Models
-- Latent Consistency Models
-- DMD
-- DMD2
-- SDXL-Lightning
-
-### Cache
-- DeepCache
-- Δ-DiT
-- Learning-to-Cache
-- FORA
-- TeaCache
-- TaylorSeer
-
-### Sparse computation / attention
-- Token Merging for Stable Diffusion
-- DiTFastAttn
-- SiTo
-
-### Compression
-- Q-Diffusion
-- Diff-Pruning
-- LD-Pruner
-- ViDiT-Q / Q-VDiT
-
-### Systems
-- StreamDiffusion
-- DistriFusion
-- xDiT
-
----
-
-## Tier 2 — 2025–2026 frontier to define the new survey contribution
-
-### Cache evolution
-Priority order:
-1. SVD-Cache
-2. DPCache
-3. D2Cache
-4. ARCache
-5. WorldCache
-6. ResCa
+1. DeepCache
+2. Δ-DiT
+3. TeaCache
+4. FasterCache
+5. TaylorSeer
+6. SVD-Cache
 7. TC-Padé
-8. LeMiCa
+8. DPCache
+9. ResCa
+10. D²Cache
+11. ARCache
+12. WorldCache
 
-Questions to extract:
-- What is cached?
-- How is cache error estimated?
-- Is reuse zero-order, predictive, subspace-based or residual-corrected?
-- Is the schedule local/adaptive or globally planned?
-- Does it work for image, video, autoregressive video or world models?
+重点观察演化：
 
-### Efficient attention / sparsity
-Priority order:
-1. Sparse VideoGen
-2. Sparse-vDiT
-3. SLA
-4. Trainable Log-linear Sparse Attention
-5. Attention Surgery
-6. SparseD
-7. ToMA
+`直接复用 → 自适应刷新 → feature prediction → 全局 schedule → world-model history cache`
 
-Questions:
-- Static vs dynamic sparse pattern?
-- Token, head, edge, block or layer granularity?
-- Training-free, calibrated or trained?
-- FLOPs reduction vs actual wall-clock speedup?
-- Custom kernel required?
+## 第三阶段：Sparse / Token / Attention
 
-### Compression + hybrid acceleration
-Priority order:
-1. CacheQuant
-2. QuantSparse
-3. Q&C
-4. DVD-Quant
-5. Q-VDiT
-6. ViDiT-Q
+1. ToMeSD
+2. AT-EDM
+3. DiTFastAttn
+4. Sparse VideoGen
+5. SiTo / ToMA
+6. ASTRAEA
+7. Light Forcing
+8. LoSA-Video
+9. Trainable Log-linear Sparse Attention
+10. Attention Surgery
 
-Questions:
-- Why does naive combination fail?
-- How is diffusion timestep variation handled?
-- Weight/activation/KV precision?
-- Does low precision amplify cache/sparse approximation error?
+重点回答：**为什么 Video DiT 在低 NFE 后越来越受 Attention 主导？理论 FLOPs reduction 怎样转成真实 GPU speedup？**
 
-### Few-step / distillation frontier
-Priority order:
-1. SANA-Sprint
-2. Phased Distribution Matching Distillation
-3. LogCD
-4. Flash-DMD
-5. recent video DMD/DMD2 variants
+## 第四阶段：Compression
 
-Questions:
-- one-step vs few-step tradeoff;
-- distribution matching vs consistency vs adversarial objectives;
-- image-to-video transfer;
-- whether quality degradation becomes the dominant constraint below 4 steps.
+1. Q-Diffusion
+2. Diff-Pruning
+3. Q-DiT
+4. DiTAS
+5. DVD-Quant
+6. QuantSparse
+7. Q&C
 
-### Systems / compound frameworks
-Priority order:
-1. FastVideo
-2. LightX2V
-3. xDiT updates
-4. SageAttention family
-5. SpargeAttn
+重点回答：量化/剪枝误差为什么会沿 diffusion timestep 累积？如何和 Cache / Sparse 组合？
 
-Questions:
-- Which algorithmic components are actually enabled together?
-- What is measured: single-GPU latency, multi-GPU scaling, throughput, memory?
-- How much speedup comes from NFE vs kernel/parallelism?
+## 第五阶段：系统与复合加速
 
----
+1. ParaDiGMS
+2. DistriFusion
+3. xDiT
+4. FastVideo
+5. TurboDiffusion
+6. FAST-AR
+7. LightX2V
 
-## Tier 3 — Application-specific expansion
+重点回答：**论文 FLOPs、kernel latency、端到端 latency、throughput、memory 之间到底是什么关系？**
 
-### dLLM
-- dLLM-Cache
-- d2Cache
-- FlashDLM / FreeCache
-- Sparse-dLLM
-- SparseD
-- Fast-dLLM / confidence-aware decoding
+## 第六阶段：新应用
 
-Core question: how do caching and sparse attention change under **bidirectional denoising**, where standard AR KV caching is not exact?
+### World Model / AR Video
 
-### World models
-- WorldCache
-- ARCache
-- temporal KV/cache compression for autoregressive video diffusion
-- sparse attention over rollout context
+ARCache → FAST-AR → Light Forcing → WorldCache
 
-Core question: how does efficiency change from one-shot video generation to **long-horizon repeated rollout**?
+### Diffusion Language Model
 
-### Other modalities
-Only add papers that contribute a distinct acceleration mechanism, not merely apply a known image method to a different modality.
+FlashDLM → SparseD
 
----
+## 每篇论文统一记录模板
 
-# Close-reading template
-
-For each paper, record:
-
-1. **Problem / bottleneck**
-2. **Core observation**
-3. **Method in one sentence**
-4. **Primary category + secondary tags**
-5. **Training requirement**
-6. **Backbone / application**
-7. **Baseline(s)**
-8. **NFE / FLOPs / latency / throughput / memory results**
-9. **Quality metrics**
-10. **Hardware / batch / resolution / sequence length**
-11. **Official code**
-12. **Key limitation**
-13. **Relationship to prior / later methods**
-14. **One figure/table worth citing in the survey**
-
-This format is intended to feed both the final survey manuscript and a future interactive roadmap in this repository.
+```text
+1. 论文解决什么瓶颈？
+2. 关键 Observation 是什么？
+3. 核心方法是什么？
+4. 是否需要训练 / 校准？
+5. 用在哪些 backbone / 应用？
+6. NFE / FLOPs 降了多少？
+7. 真实 latency / throughput 提升多少？
+8. 使用什么 GPU / batch / resolution / frames？
+9. 质量损失是多少？
+10. 代码是否公开？
+11. 主要局限是什么？
+12. 与前后工作的关系是什么？
+```
