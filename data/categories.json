@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sampling",
+    "name": "Fast Sampling & Step Reduction",
+    "question": "How can we reduce the number of model evaluations?",
+    "redundancy": "denoising-step / trajectory redundancy"
+  },
+  {
+    "id": "distillation",
+    "name": "Distillation & Few-Step Generation",
+    "question": "How can a model learn to generate in one or a few steps?",
+    "redundancy": "learned trajectory compression"
+  },
+  {
+    "id": "cache",
+    "name": "Cache & Computation Reuse",
+    "question": "What can be reused or predicted across denoising steps or rollout segments?",
+    "redundancy": "cross-step / cross-segment representation redundancy"
+  },
+  {
+    "id": "sparse",
+    "name": "Efficient Attention & Sparse Computation",
+    "question": "Which tokens, attention edges, heads, layers or blocks actually need computation?",
+    "redundancy": "token / attention / structural redundancy"
+  },
+  {
+    "id": "compression",
+    "name": "Model Compression",
+    "question": "How can each model evaluation use fewer parameters, bytes or arithmetic operations?",
+    "redundancy": "parameter / precision redundancy"
+  },
+  {
+    "id": "systems",
+    "name": "Systems & Parallelism",
+    "question": "How can algorithmic savings translate into real latency and throughput gains?",
+    "redundancy": "runtime / communication / memory inefficiency"
+  }
+]
