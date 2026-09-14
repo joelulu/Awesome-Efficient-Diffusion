@@ -1,0 +1,8 @@
+[
+  {"id":"sampling","name":"快速采样与步数缩减","short":"Sampling","color":"#2563eb","description":"减少模型评估次数（NFE），包括快速求解器、时间步调度与轨迹优化。"},
+  {"id":"distillation","name":"蒸馏与少步生成","short":"Distillation","color":"#d97706","description":"通过训练把多步扩散/流模型压缩为 1–8 步生成器。"},
+  {"id":"cache","name":"缓存与计算复用","short":"Cache","color":"#059669","description":"利用相邻去噪步、层、token 或历史片段之间的冗余，复用或预测中间计算。"},
+  {"id":"sparse","name":"高效注意力与稀疏计算","short":"Sparse","color":"#db2777","description":"减少每一步真正参与计算的 token、attention edge、head 或 block。"},
+  {"id":"compression","name":"模型压缩与低精度","short":"Compression","color":"#7c3aed","description":"通过量化、剪枝、低秩和结构压缩降低模型与算术成本。"},
+  {"id":"systems","name":"系统优化与并行","short":"Systems","color":"#0891b2","description":"通过并行、kernel、offload、编译和服务优化把算法收益转化为真实延迟收益。"}
+]
